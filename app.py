@@ -1,10 +1,13 @@
 import os
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers, models
 from PIL import Image
 import io
+
+# Sicherstellen, dass TensorFlow nur die CPU nutzt
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 # Initialisiere Flask
 app = Flask(__name__)
@@ -21,10 +24,9 @@ def create_model(input_shape):
 model = create_model((32, 32, 3))  # Beispiel für niedrigauflösendes Bild (32x32)
 model.compile(optimizer='adam', loss='mse')
 
-# Dummy-Daten laden (normalerweise würdest du echte Trainingsdaten verwenden)
-# Hier lade ich ein zufälliges Bild als Beispiel
+# Dummy-Daten laden
 input_image = np.random.rand(1, 32, 32, 3)
-target_image = np.random.rand(1, 128, 128, 3)
+target_image = np.random.rand(1, 32, 32, 3)  # Gleiche Dimension wie die Eingabe
 model.fit(input_image, target_image, epochs=10)
 
 @app.route('/upscale', methods=['POST'])
@@ -60,3 +62,4 @@ def upscale_image():
 if __name__ == '__main__':
     # Run Flask server on 0.0.0.0 and allow Render to assign the port
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)), debug=True)
+

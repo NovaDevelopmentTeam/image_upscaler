@@ -13,12 +13,14 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 app = Flask(__name__)
 
 # Erstelle ein einfaches CNN für Super-Resolution
+from tensorflow.keras.layers import Input
+
 def create_model(input_shape):
-    model = models.Sequential()
-    model.add(layers.Conv2D(64, (9, 9), activation='relu', padding='same', input_shape=input_shape))
-    model.add(layers.Conv2D(32, (1, 1), activation='relu', padding='same'))
-    model.add(layers.Conv2D(3, (5, 5), activation='sigmoid', padding='same'))  # 3 für RGB
-    return model
+    inputs = Input(shape=input_shape)
+    x = layers.Conv2D(64, (9, 9), activation='relu', padding='same')(inputs)
+    x = layers.Conv2D(32, (1, 1), activation='relu', padding='same')(x)
+    outputs = layers.Conv2D(3, (5, 5), activation='sigmoid', padding='same')(x)
+    return models.Model(inputs, outputs)
 
 # Lade das Modell
 model = create_model((32, 32, 3))  # Beispiel für niedrigauflösendes Bild (32x32)

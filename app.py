@@ -58,4 +58,5 @@ def upscale_image():
     return send_file(img_byte_arr, mimetype='image/png')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Run Flask server on 0.0.0.0 and allow Render to assign the port
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)), debug=True)

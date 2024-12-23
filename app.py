@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, render_template
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers, models
@@ -31,6 +31,10 @@ model.compile(optimizer='adam', loss='mse')
 input_image = np.random.rand(1, 32, 32, 3)
 target_image = np.random.rand(1, 32, 32, 3)  # Gleiche Dimension wie die Eingabe
 model.fit(input_image, target_image, epochs=10, verbose=0)
+
+@app.route('/')
+def home():
+    return render_template('index.html')  # Die HTML-Datei mit der Benutzeroberfläche
 
 @app.route('/upscale', methods=['POST'])
 def upscale_image():
@@ -67,10 +71,5 @@ def upscale_image():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/')
-def home():
-    return "Willkommen bei der Super-Resolution API! Senden Sie ein POST-Request an /upscale mit einem Bild, um es hochzuskalieren."
-
 if __name__ == '__main__':
-    # Run Flask server on 0.0.0.0 and allow Render to assign the port
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)), debug=True)

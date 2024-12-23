@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, jsonify, send_file, render_template
+from flask import Flask, request, jsonify, send_from_directory
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers, models
@@ -32,10 +32,6 @@ input_image = np.random.rand(1, 32, 32, 3)
 target_image = np.random.rand(1, 32, 32, 3)  # Gleiche Dimension wie die Eingabe
 model.fit(input_image, target_image, epochs=10, verbose=0)
 
-@app.route('/')
-def home():
-    return render_template('index.html')  # Die HTML-Datei mit der Benutzeroberfläche
-
 @app.route('/upscale', methods=['POST'])
 def upscale_image():
     try:
@@ -61,15 +57,27 @@ def upscale_image():
         # In ein PIL-Image konvertieren
         result_img = Image.fromarray(upscaled_img)
 
-        # Das Ergebnis als Bytes zurückgeben
-        img_byte_arr = io.BytesIO()
-        result_img.save(img_byte_arr, format='PNG')
-        img_byte_arr.seek(0)
+        # Speichern des generierten Bildes
+        output_dir = 'static/uploads'
+        os.makedirs(output_dir, exist_ok=True)  # Falls der Ordner nicht existiert
+        output_path = os.path.join(output_dir, 'upscaled_image.png')
+        result_img.save(output_path)
 
-        return send_file(img_byte_arr, mimetype='image/png')
+        # Bild zum Herunterladen anbieten
+        return jsonify({'message': 'Image successfully upscaled', 'download_link': f'/download/{os.path.basename(output_path)}'})
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/download/<filename>', methods=['GET'])
+def download_image(filename):
+    # Bild für den Download bereitstellen
+    return send_from_directory('static/uploads', filename)
+
+@app.route('/')
+def home():
+    return "Willkommen bei der Super-Resolution API! Senden Sie ein POST-Request an /upscale mit einem Bild, um es hochzuskalieren."
+
 if __name__ == '__main__':
+    # Run Flask server on 0.0.0.0 and allow Render to assign the port
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)), debug=True)

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upscaler</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        input[type="file"] {
+            margin: 20px 0;
+        }
+        img {
+            max-width: 100%;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Image Upscaler</h1>
+    <p>Upload a low-resolution image to upscale it!</p>
+    
+    <input type="file" id="imageUpload" />
+    <button onclick="uploadImage()">Upload and Upscale</button>
+    
+    <h3>Upscaled Image:</h3>
+    <img id="upscaledImage" src="" alt="Upscaled image will appear here" />
+    
+    <script>
+        function uploadImage() {
+            var formData = new FormData();
+            var fileInput = document.getElementById('imageUpload');
+            var file = fileInput.files[0];
+            formData.append("image", file);
+
+            fetch('/upscale', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                var img = document.getElementById('upscaledImage');
+                img.src = URL.createObjectURL(blob);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>

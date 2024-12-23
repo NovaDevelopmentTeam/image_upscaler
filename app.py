@@ -76,7 +76,8 @@ def download_image(filename):
 
 @app.route('/')
 def home():
-    return "Willkommen bei der Super-Resolution API! Senden Sie ein POST-Request an /upscale mit einem Bild, um es hochzuskalieren."
+    return send_file('index.html')
+
 
 if __name__ == '__main__':
     # Run Flask server on 0.0.0.0 and allow Render to assign the port

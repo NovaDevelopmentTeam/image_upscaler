@@ -24,42 +24,51 @@ def create_model(input_shape):
 model = create_model((32, 32, 3))  # Beispiel für niedrigauflösendes Bild (32x32)
 model.compile(optimizer='adam', loss='mse')
 
-# Dummy-Daten laden
+# Dummy-Daten generieren und Modell trainieren
+# Hinweis: Dies ist nur ein Beispieltraining, in der Praxis sollte ein vortrainiertes Modell verwendet werden.
 input_image = np.random.rand(1, 32, 32, 3)
 target_image = np.random.rand(1, 32, 32, 3)  # Gleiche Dimension wie die Eingabe
-model.fit(input_image, target_image, epochs=10)
+model.fit(input_image, target_image, epochs=10, verbose=0)
 
 @app.route('/upscale', methods=['POST'])
 def upscale_image():
-    if 'image' not in request.files:
-        return jsonify({'error': 'No image file provided'}), 400
-    
-    file = request.files['image']
-    img = Image.open(file.stream)
+    try:
+        # Überprüfen, ob eine Bilddatei hochgeladen wurde
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file provided'}), 400
 
-    # Image vorverarbeiten: Konvertiere es zu einem NumPy Array
-    img = img.resize((32, 32))  # Niedrige Auflösung simulieren
-    img_array = np.array(img) / 255.0  # Normalisieren
-    img_array = img_array.reshape((1, 32, 32, 3))
+        file = request.files['image']
+        img = Image.open(file.stream).convert('RGB')  # Konvertieren in RGB
 
-    # Upscaling durchführen
-    upscaled_img = model.predict(img_array)
+        # Bild vorverarbeiten: Größe anpassen und normalisieren
+        img = img.resize((32, 32))  # Niedrige Auflösung simulieren
+        img_array = np.array(img) / 255.0  # Normalisieren
+        img_array = img_array.reshape((1, 32, 32, 3))
 
-    # Vorhersage nach Bildgröße umwandeln
-    upscaled_img = np.clip(upscaled_img[0], 0, 1) * 255  # Werte zurück auf [0, 255]
-    upscaled_img = upscaled_img.astype(np.uint8)
+        # Upscaling durchführen
+        upscaled_img = model.predict(img_array)
 
-    # Bild zurück in ein PIL-Image konvertieren
-    result_img = Image.fromarray(upscaled_img)
-    
-    # Das Ergebnis als Bytes zurückgeben
-    img_byte_arr = io.BytesIO()
-    result_img.save(img_byte_arr, format='PNG')
-    img_byte_arr.seek(0)
+        # Vorhersage verarbeiten: Werte zurück auf [0, 255] skalieren
+        upscaled_img = np.clip(upscaled_img[0], 0, 1) * 255  # Werte clippen und skalieren
+        upscaled_img = upscaled_img.astype(np.uint8)
 
-    return send_file(img_byte_arr, mimetype='image/png')
+        # In ein PIL-Image konvertieren
+        result_img = Image.fromarray(upscaled_img)
+
+        # Das Ergebnis als Bytes zurückgeben
+        img_byte_arr = io.BytesIO()
+        result_img.save(img_byte_arr, format='PNG')
+        img_byte_arr.seek(0)
+
+        return send_file(img_byte_arr, mimetype='image/png')
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/')
+def home():
+    return "Willkommen bei der Super-Resolution API! Senden Sie ein POST-Request an /upscale mit einem Bild, um es hochzuskalieren."
 
 if __name__ == '__main__':
     # Run Flask server on 0.0.0.0 and allow Render to assign the port
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)), debug=True)
-

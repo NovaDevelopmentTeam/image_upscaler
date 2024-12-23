@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, jsonify, send_from_directory, send_file
+from flask import Flask, request, jsonify, send_from_directory, render_template
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers, models
@@ -27,7 +27,6 @@ model = create_model((32, 32, 3))  # Beispiel für niedrigauflösendes Bild (32x
 model.compile(optimizer='adam', loss='mse')
 
 # Dummy-Daten generieren und Modell trainieren
-# Hinweis: Dies ist nur ein Beispieltraining, in der Praxis sollte ein vortrainiertes Modell verwendet werden.
 input_image = np.random.rand(1, 32, 32, 3)
 target_image = np.random.rand(1, 32, 32, 3)  # Gleiche Dimension wie die Eingabe
 model.fit(input_image, target_image, epochs=10, verbose=0)
@@ -76,7 +75,8 @@ def download_image(filename):
 
 @app.route('/')
 def home():
-    return send_file('index.html')
+    # index.html aus dem templates-Ordner rendern
+    return render_template('index.html')
 
 
 if __name__ == '__main__':

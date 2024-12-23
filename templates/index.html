@@ -1,52 +1,86 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Upscaler</title>
+    <title>Bild Upscaling</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            padding: 20px;
+            margin-top: 50px;
         }
         input[type="file"] {
-            margin: 20px 0;
+            display: none;
         }
-        img {
-            max-width: 100%;
+        .btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            margin: 10px;
+        }
+        .btn-upload {
+            background-color: #008CBA;
+        }
+        #selected-image {
             margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>Image Upscaler</h1>
-    <p>Upload a low-resolution image to upscale it!</p>
-    
-    <input type="file" id="imageUpload" />
-    <button onclick="uploadImage()">Upload and Upscale</button>
-    
-    <h3>Upscaled Image:</h3>
-    <img id="upscaledImage" src="" alt="Upscaled image will appear here" />
-    
+
+    <h1>Super-Resolution Bild Upscaling</h1>
+    <p>Wählen Sie ein Bild aus und klicken Sie auf "Upload", um es hochzuskalieren.</p>
+
+    <!-- Button zum Öffnen des Dateimanagers -->
+    <label for="file-upload" class="btn">Bild auswählen</label>
+    <input type="file" id="file-upload" accept="image/*">
+
+    <!-- Zeigt den Dateinamen an -->
+    <p id="selected-image"></p>
+
+    <!-- Upload Button -->
+    <button class="btn btn-upload" onclick="uploadImage()">Upload</button>
+
+    <div id="result"></div>
+
     <script>
+        let selectedFile = null;
+
+        // Zeigt den Namen des ausgewählten Bildes an
+        document.getElementById('file-upload').addEventListener('change', function(event) {
+            selectedFile = event.target.files[0];
+            if (selectedFile) {
+                document.getElementById('selected-image').innerText = `Ausgewähltes Bild: ${selectedFile.name}`;
+            }
+        });
+
+        // Funktion zum Hochladen des Bildes
         function uploadImage() {
-            var formData = new FormData();
-            var fileInput = document.getElementById('imageUpload');
-            var file = fileInput.files[0];
-            formData.append("image", file);
+            if (!selectedFile) {
+                alert('Bitte wählen Sie ein Bild aus.');
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append('image', selectedFile);
 
             fetch('/upscale', {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.blob())
-            .then(blob => {
-                var img = document.getElementById('upscaledImage');
-                img.src = URL.createObjectURL(blob);
+            .then(imageBlob => {
+                // Anzeige des hochskalierten Bildes
+                let imageUrl = URL.createObjectURL(imageBlob);
+                document.getElementById('result').innerHTML = `<h2>Hochskaliertes Bild</h2><img src="${imageUrl}" alt="Upscaled Image" />`;
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Fehler beim Hochladen:', error);
+                alert('Fehler beim Hochladen des Bildes.');
             });
         }
     </script>
